@@ -7,7 +7,7 @@ import pandas as pd
 from astropy.time import Time
 
 #The file for saved clear night dates. Edit for your own purposes.
-observations = pd.read_csv('C://Users/zsumn/Desktop/ImageCharacteristics.csv')
+observations = pd.read_csv('C:/Users/ronald.sumners/Desktop/ImageCharacteristics.csv')
 
 unique_dates = observations['Date'].unique()
 frequencyClear = []
@@ -35,5 +35,6 @@ for date in unique_dates:
     if times > 60:
         sqmdetection.append(date)
 
+#Dates output are the nights STARTING on that day (6pm of day x to 10am of day x+1).
 print('CLEAR NIGHTS FOR SQM REFERENCE:')
 print(sqmdetection)
