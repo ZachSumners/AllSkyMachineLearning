@@ -1,11 +1,11 @@
 #This script uses RAO AllSky images as input and determines which nights are clear through two machine learning algorithms (one for sky condition classification and other to extract the date stamp from the image.)
-#Can run images in batch. Simply write the directory the images are in as the argument of line 33.
+#Can run images in batch. Simply write the directory the images are in as the argument of line 5.
 
 #***MAKE SURE TO EDIT FILE LOCATIONS FOR YOUR USE.***
-directoryOfImages = 'C://Users/zsumn/Desktop/AllSkyTestingSub'
-allSkyModelLocation = 'C://Users/zsumn/Desktop/AllSkyML/AllSkyModel'
-digitModelLocation = 'C://Users/zsumn/Desktop/AllSkyML/DigitDetection/DigitModel'
-saveClearNightInfoLocation = 'C://Users/zsumn/Desktop/ImageCharacteristics.csv'
+directoryOfImages = '//stor01.rao.phas.ucalgary.ca/RAO_Network_Drive/AllSkyCamera/2020July01'
+allSkyModelLocation = 'C:/Users/ronald.sumners/Desktop/AllSkyModel'
+digitModelLocation = 'C:/Users/ronald.sumners/Desktop/DigitModel'
+saveClearNightInfoLocation = 'C:/Users/ronald.sumners/Desktop/ImageCharacteristics.csv'
 
 import numpy as np
 import tensorflow as tf
@@ -31,10 +31,14 @@ date_classnames = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 slashboxes = [(5, 5), (11, 5), (17, 5), (23, 5), (32, 5), (38, 5), (47, 5), (53, 5), (5, 18), (11, 18), (20, 18), (26, 18), (35, 18), (41, 18), (5, 465), (11, 465), (17, 465), (23, 465), (29, 465), (35, 465), (41, 465), (47, 465), (53, 465)]
 dashboxes = [(5, 5), (11, 5), (17, 5), (23, 5), (33, 5), (39, 5), (49, 5), (55, 5), (5, 18), (11, 18), (20, 18), (26, 18), (35, 18), (41, 18), (5, 465), (11, 465), (17, 465), (23, 465), (29, 465), (35, 465), (41, 465), (47, 465), (53, 465)]
 
-image_characteristics = pd.DataFrame({})
+snList = []
+dateList = []
+timeList = []
 
 
 for allsky_filename in os.listdir(directoryOfImages):
+    if allsky_filename == 'AllSkyImage003546098.JPG':
+        break
     print(allsky_filename)
 
     #Load in images.
@@ -49,7 +53,7 @@ for allsky_filename in os.listdir(directoryOfImages):
     correctclass = allsky_classnames[np.argmax(score)]
 
     #If more than 75% confident sky is clear, read off the time and date from the date stamp.
-    if correctclass == 'Clear' and np.max(score)*100 > 75:
+    if correctclass == 'EdgeCloud' and np.max(score)*100 > 75:
         #Load in date stamp.
         dateimg = tf.keras.utils.load_img(f'{directoryOfImages}/{allsky_filename}')
         dateimg_array = tf.keras.utils.img_to_array(dateimg)
@@ -73,8 +77,8 @@ for allsky_filename in os.listdir(directoryOfImages):
             datepredictions = datemodel.predict(cropped)
             datescore = tf.nn.softmax(datepredictions[0])
 
-            #If digit classification more than 95% confident, store the number and move to the next. If not, move on to next sky condition classification.
-            if np.max(datescore)*100 > 95:
+            #If digit classification more than 75% confident, store the number and move to the next. If not, move on to next sky condition classification.
+            if np.max(datescore)*100 > 75:
                 digit = date_classnames[np.argmax(datescore)]
                 numbers.append(digit)
             else:
@@ -91,10 +95,13 @@ for allsky_filename in os.listdir(directoryOfImages):
             )
             print(f'DATE: {date}.\nTIME: {time}.\nSERIAL NUMBER: {sn}')
             j += 1
-            image_characteristics = pd.concat([image_characteristics, pd.DataFrame(data={'SN': sn, 'Date': date, 'Time': time}, index=[j], dtype='str')])
-
+            snList.append(sn)
+            dateList.append(date)
+            timeList.append(time)
+            
         except IndexError:
             print('Prediction failed.')
 
 #Save times of clear images to pandas dataframe.
+image_characteristics = pd.DataFrame(data={'SN': sn, 'Date': date, 'Time': time}, index=[j], dtype='str')
 image_characteristics.to_csv(saveClearNightInfoLocation)
