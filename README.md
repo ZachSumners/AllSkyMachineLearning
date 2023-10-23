@@ -2,4 +2,4 @@ This repository contains a pretrained convolutional neural network to detect wea
 
 It classifies images into one of six categories, ranging from daytime (overexposed images), to clear, to cloudy. 
 
-The next step is to use the weather classifications to cross reference with the Sky Quality Meter (SQM), and bundle clear night conditions with clear SQM data.
+The next step is to use the weather classifications to cross reference with the Sky Quality Meter (SQM), and bundle clear night conditions with clear SQM data. The SQMFlag file outputs the date of clear nights to cross reference to SQM archives.
